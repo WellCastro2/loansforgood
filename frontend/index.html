@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Loans For Good</title>
+
+  <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    body {
+        background-color: #f2f2f2;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        }
+
+        h1 {
+        color: #008000;
+        }
+
+        form {
+        background-color: #ffffff;
+        border: 1px solid #008000;
+        border-radius: 5px;
+        padding: 20px;
+        margin-bottom: 20px;
+        }
+
+        label {
+        display: block;
+        margin-bottom: 10px;
+        }
+
+        input[type="text"] {
+        width: 300px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        }
+
+        button[type="submit"] {
+        padding: 10px 20px;
+        background-color: #008000;
+        color: #ffffff;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        }
+
+        h2 {
+        color: #008000;
+        margin-top: 20px;
+        }
+
+        table {
+        width: 100%;
+        border-collapse: collapse;
+        }
+
+        th, td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+        }
+
+        th {
+        background-color: #008000;
+        color: #ffffff;
+        }
+
+  </style>
+</head>
+<body>
+  <h1>Solicitar proposta</h1>
+  
+  <form id="loan-form" method="POST">
+    <label for="name">Nome:</label>
+    <input type="text" id="name" name="name" required>
+    <br>
+    <br>
+    <label for="cpf">CPF:</label>
+    <input type="text" id="cpf" name="cpf" required>
+    <br>
+    <br>
+  </form>
+
+  <h2>Listagem de Pedidos</h2>
+  <table id="requests-table">
+    <tr>
+      <th>Nome</th>
+      <th>CPF</th>
+    </tr>
+  </table>
+
+
+  <script>
+
+    // preparar formulario
+    function getCamposFormulario() {
+      return fetch("http://127.0.0.1:8000/api/formulario/")
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error("Erro " + response.status + ": " + response.statusText);
+          }
+          return response.json();
+        })
+        .catch(function(error) {
+          console.error("Erro ao obter campos do formulário:", error);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      getCamposFormulario()
+        .then(function(campos) {
+          campos.forEach(function(campo) {
+
+            var form = document.getElementById("loan-form");
+            var label = document.createElement("label");
+            label.setAttribute("for", campo.campo);
+            label.textContent = campo.label + ":";
+            form.appendChild(label);
+            var input = document.createElement("input");
+            input.setAttribute("type", campo.tipo);
+            input.setAttribute("id", campo.campo);
+            input.setAttribute("name", campo.campo);
+            input.required = true;
+            form.appendChild(input);
+            form.appendChild(document.createElement("br"));
+            form.appendChild(document.createElement("br"));
+
+            var submitButton = document.createElement("button");
+            submitButton.setAttribute("type", "submit");
+            submitButton.textContent = "Enviar";
+            form.appendChild(submitButton);
+          });
+        });
+    });
+
+
+    // envio proposta
+    document.getElementById("loan-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    
+    var name = document.getElementById("name").value;
+    var cpf = document.getElementById("cpf").value;
+    
+    var data = {
+        nome: name,
+        cpf: cpf
+    };
+    
+    fetch("http://127.0.0.1:8000/api/pedido/", {
+        method: "POST",
+        headers: {
+        "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(function(response) {
+        if (!response.ok) {
+                Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: response.statusText
+            })
+        } else {
+            Swal.fire(
+                'Em analise',
+                'Em breve entraremos em contato com uma resposta para seu pedido!',
+                'info'
+            )
+            // Atualizar a tabela com os dados do pedido feito
+            var table = document.getElementById("requests-table");
+            var newRow = table.insertRow(-1);
+            var nameCell = newRow.insertCell(0);
+            var cpfCell = newRow.insertCell(1);
+            nameCell.innerHTML = name;
+            cpfCell.innerHTML = cpf;
+
+            return response.json();
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: "error"
+        })
+        console.error(error);
+    });
+})
+</script>
+</body>
+</html>

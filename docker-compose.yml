@@ -1,0 +1,73 @@
+version: '3.5'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.8.8-management
+    hostname: rabbitmq
+    env_file: .env
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - api_network
+
+  web:
+    build: .
+    command: bash -c "python /code/manage.py migrate --noinput && ${WEB_RUN}"
+    volumes:
+      - .:/code
+      - static_volume:/code/staticfiles
+    env_file: .env
+    depends_on:
+        - image_db_api_data
+    ports:
+      - "8000:8000"
+    networks:
+      - api_network
+    stdin_open: true
+    tty: true
+
+  front:
+    image: nginx
+    ports:
+      - 8100:80
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+
+  image_db_api_data:
+      image: "postgres:11"
+      restart: always
+      container_name: "postgres_api_data"
+      env_file: .env
+      ports:
+        - "54320:5432"
+      volumes:
+        - ./.data:/var/lib/postgresql/data
+      environment:
+        - POSTGRES_DB=${POSTGRES_DB}
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      networks:
+        - api_network
+
+  worker:
+    build: .
+    restart: "no"
+    env_file: .env
+    command: bash -c "${CELERY_RUN}"
+    volumes:
+      - .:/code
+    depends_on:
+      - rabbitmq
+    networks:
+      - api_network
+
+networks:
+  api_network:
+    driver: bridge
+
+volumes:
+  static_volume:

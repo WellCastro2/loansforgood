@@ -15,12 +15,16 @@ O projeto consiste em uma API para solicitação de empréstimo e um frontend co
 - JS
 - CSS
 
-## Build do projeto
+
+# Executando o projeto
+
+## 1) Renomeie o arquivo example.env para .env
+
+## 2) Build do projeto
 ### O build do projeto irá também criar o usuário admin.
 ```
 make build
 ```
-
 
 ## Backend(Admin)
 username: admin

@@ -17,6 +17,7 @@ services:
   web:
     build: .
     command: bash -c "python /code/manage.py migrate --noinput && ${WEB_RUN}"
+    restart: on-failure:3
     volumes:
       - .:/code
       - static_volume:/code/staticfiles
@@ -32,6 +33,7 @@ services:
 
   front:
     image: nginx
+    restart: on-failure:3
     ports:
       - 8100:80
     volumes:

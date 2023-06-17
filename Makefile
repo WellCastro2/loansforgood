@@ -1,8 +1,10 @@
-build
+build:
 	docker-compose build
+	docker-compose up image_db_api_data &
+	sleep 10
 	docker-compose up &
-	sleep 3
+	sleep 15
 	docker-compose run web python manage.py initadmin
 
-run
+run:
 	docker-compose up &
